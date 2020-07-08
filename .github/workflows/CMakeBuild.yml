@@ -2,74 +2,72 @@ name: C++ CI
 on: [push, pull_request]
 
 jobs:
-  build-linux:
-    runs-on: ${{ matrix.os }}
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04]
-        compiler: [gcc, clang]
+        config:
+        - {
+            name: "Windows Latest (MSVC)",
+            os: windows-latest,
+            build_type: "Release", cc: "cl", cxx: "cl",
+            environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
+        }
+        - {
+            name: "Ubuntu 18.04 (GCC)",
+            os: ubuntu-18.04,
+            build_type: "Release", cc: "gcc", cxx: "g++"
+          }
+        - {
+            name: "Ubuntu 18.04 (Clang)",
+            os: ubuntu-18.04,
+            build_type: "Release", cc: "clang", cxx: "clang++"
+          }
+        - {
+            name: "macOS 10.15 (Clang)",
+            os: macos-10.15,
+            build_type: "Release", cc: "clang", cxx: "clang++"
+          }
 
     steps:
-      - name: Checkout 
+      - name: Checkout
         uses: actions/checkout@v2
 
       - name: Clone Submodules
         run: git submodule update --init
 
-      - name: Install Build Dependencies
-        run: sudo apt install -y ninja-build
-
-      - name: Configure CMake
+      - name: Get Build Dependencies
+        shell: cmake -P {0}
         run: |
-          # Sets the compiler to what it's supposed to be.
-          if [ "${{ matrix.compiler }}" = "gcc" ]; then
-            export CC=/usr/bin/gcc
-            export CXX=/usr/bin/g++
-          else
-            export CC=/usr/bin/clang
-            export CXX=/usr/bin/clang++
-          fi
+          set(ninja_version "latest")
 
-          cmake -S.  -GNinja -BBuild
+          if ("${{ runner.os }}" STREQUAL "Windows")
+            set(ninja_suffix "win.zip")
+          elseif ("${{ runner.os }}" STREQUAL "Linux")
+            set(ninja_suffix "linux.zip")
+          elseif ("${{ runner.os }}" STREQUAL "macOS")
+            set(ninja_suffix "mac.zip")
+          endif()
 
-      - name: Build
-        run: cmake --build Build
+          set(ninja_url "https://github.com/ninja-build/ninja/releases/download/v${ninja_version}/ninja-${ninja_suffix}")
+          file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ninja.zip)
 
-  build-macos:
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Clone Submodules
-        run: git submodule update --init
-
-      - name: Install Build Dependencies
-        run: brew install ninja
+          if (NOT "${{ runner.os }}" STREQUAL "Windows")
+            execute_process(COMMAND chmod +x ninja)
+          endif()
 
       - name: Configure CMake
-        run: cmake -S. -GNinja -BBuild
+        shell: cmake -P {0}
+        run: |
+          set(ENV{CC} ${{ matrix.config.cc }})
+          set(ENV{CXX} ${{ matrix.config.cxx }})
 
-      - name: Build
-        run: cmake --build Build
+          file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/ninja" ninja_program)
 
-  build-windows:
-    runs-on: windows-latest
+          execute_process(COMMAND cmake -S. -BBuild -GNinja -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} -DCMAKE_MAKE_PROGRAM=${ninja_program})
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Clone Submodules
-        run: git submodule update --init
-
-      - name: Install Build Dependencies
-        run: echo "Nothing Yet!"
-
-      - name: Configure CMake
-        run: cmake -S. -BBuild
-
-      - name: Build
+      - name: Build Project
         run: cmake --build Build
