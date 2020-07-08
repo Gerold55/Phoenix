@@ -51,7 +51,9 @@ jobs:
 
           set(ninja_url "https://github.com/ninja-build/ninja/releases/latest/download/ninja-${ninja_suffix}")
           file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
-          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ninja.zip)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E mkdir BUILD_TOOLS)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E tar -C BUILD_TOOLS -xvf ./ninja.zip)
+          message("::add-path::$ENV{GITHUB_WORKSPACE}/BUILD_TOOLS")
 
           if (NOT "${{ runner.os }}" STREQUAL "Windows")
             execute_process(COMMAND chmod +x ninja)
@@ -65,7 +67,7 @@ jobs:
 
           file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/ninja" ninja_program)
 
-          execute_process(COMMAND cmake -S. -BBuild -GNinja -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} -DCMAKE_MAKE_PROGRAM=${ninja_program})
+          execute_process(COMMAND cmake -S. -BBuild -GNinja -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }})
 
       - name: Build Project
         run: cmake --build Build
