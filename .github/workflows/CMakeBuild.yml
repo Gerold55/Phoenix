@@ -50,10 +50,9 @@ jobs:
           endif()
 
           execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory BUILD_TOOLS)
-          execute_process(COMMAND ${CMAKE_COMMAND} -E chdir BUILD_TOOLS)
           set(ninja_url "https://github.com/ninja-build/ninja/releases/latest/download/ninja-${ninja_suffix}")
           file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
-          execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xvf ./ninja.zip)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xvf ../ninja.zip WORKING_DIRECTORY ./BUILD_TOOLS/)
           message("::add-path::$ENV{GITHUB_WORKSPACE}/BUILD_TOOLS")
 
           if (NOT "${{ runner.os }}" STREQUAL "Windows")
