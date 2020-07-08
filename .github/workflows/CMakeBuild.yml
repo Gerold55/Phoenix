@@ -51,7 +51,7 @@ jobs:
 
           set(ninja_url "https://github.com/ninja-build/ninja/releases/latest/download/ninja-${ninja_suffix}")
           file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
-          execute_process(COMMAND ${CMAKE_COMMAND} -E mkdir BUILD_TOOLS)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory BUILD_TOOLS)
           execute_process(COMMAND ${CMAKE_COMMAND} -E tar -C BUILD_TOOLS -xvf ./ninja.zip)
           message("::add-path::$ENV{GITHUB_WORKSPACE}/BUILD_TOOLS")
 
