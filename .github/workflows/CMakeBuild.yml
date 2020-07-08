@@ -53,7 +53,7 @@ jobs:
           execute_process(COMMAND ${CMAKE_COMMAND} -E chdir BUILD_TOOLS)
           set(ninja_url "https://github.com/ninja-build/ninja/releases/latest/download/ninja-${ninja_suffix}")
           file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
-          execute_process(COMMAND ${CMAKE_COMMAND} -E tar -C BUILD_TOOLS -xvf ./ninja.zip)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xvf ./ninja.zip)
           message("::add-path::$ENV{GITHUB_WORKSPACE}/BUILD_TOOLS")
 
           if (NOT "${{ runner.os }}" STREQUAL "Windows")
