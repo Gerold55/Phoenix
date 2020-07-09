@@ -78,7 +78,27 @@ jobs:
             endforeach()
           endif()
 
-          execute_process(COMMAND cmake -S. -BBuild -GNinja -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }})
+          execute_process(COMMAND cmake -S. -BBuild -GNinja -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} RESULT_VARIABLE result)
+
+          if (NOT result EQUAL 0)
+            message(FATAL_ERROR "Bad exit status.")
+          endif()
 
       - name: Build Project
-        run: cmake --build Build
+        shell: cmake -P {0}
+        run: |
+          set(ENV{NINJA_STATUS} "[%f/%t %o/sec] ")
+          if ("${{ runner.os }}" STREQUAL "Windows" AND NOT "x${{ matrix.config.environment_script }}" STREQUAL "x")
+            file(STRINGS environment_script_output.txt output_lines)
+            foreach(line IN LISTS output_lines)
+              if (line MATCHES "^([a-zA-Z0-9_-]+)=(.*)$")
+                set(ENV{${CMAKE_MATCH_1}} "${CMAKE_MATCH_2}")
+              endif()
+            endforeach()
+          endif()
+
+          execute_process(COMMAND cmake --build Build RESULT_VARIABLE result)
+
+          if (NOT result EQUAL 0)
+            message(FATAL_ERROR "Bad exit status.")
+          endif()
