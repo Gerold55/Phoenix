@@ -65,6 +65,21 @@ jobs:
             execute_process(COMMAND chmod +x ninja)
           endif()
 
+      - name: Prepare Cache
+        id: cache_prep
+        shell: cmake -P {0}
+        run: |
+          string(TIMESTAMP current_date "%Y-%m-%d-%H;%M;%S" UTC)
+          message("::set-output name=timestamp::${current_date}")
+
+      - name: Pull Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/BUILD_CACHE
+          key: ${{ matrix.config.name }}-cache-${{ steps.cache_prep.output.timestamp }}
+          restore-keys: |
+            ${{ matrix.config.name }}-cache-
+
       - name: Configure CMake
         shell: cmake -P {0}
         run: |
