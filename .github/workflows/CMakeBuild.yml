@@ -76,7 +76,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/BUILD_CACHE
-          key: ${{ matrix.config.name }}-cache-${{ steps.cache_prep.output.timestamp }}
+          key: ${{ matrix.config.name }}-cache-${{ steps.cache_prep.outputs.timestamp }}
           #restore-keys: |
           #  ${{ matrix.config.name }}-cache-
 
