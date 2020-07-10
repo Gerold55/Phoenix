@@ -12,7 +12,7 @@ jobs:
         - {
             name: "Windows Latest (MSVC)",
             os: windows-latest,
-            build_type: "Release", cc: "cl", cxx: "cl",
+            build_type: "Release", cc: "clcache cl", cxx: "clcache cl",
             environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
         }
         - {
@@ -32,12 +32,10 @@ jobs:
           }
 
     steps:
-      - name: Clone Working Branch
+      - name: Checkout Repo
         uses: actions/checkout@v2.3.1
         with:
           submodules: "recursive"
-          # if *any* of our scripts run a git command after this, remove this so they can be authenticated.
-          persist-credentials: false
 
       - name: Get Build Dependencies
         shell: cmake -P {0}
@@ -50,10 +48,17 @@ jobs:
             set(ninja_suffix "mac.zip")
           endif()
 
+          # uses clcache 4.2.0 and latest ninja.
+
           execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory BUILD_TOOLS)
-          set(ninja_url "https://github.com/ninja-build/ninja/releases/latest/download/ninja-${ninja_suffix}")
-          file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
+          file(DOWNLOAD "https://github.com/ninja-build/ninja/releases/latest/download/ninja-${ninja_suffix}" ./ninja.zip SHOW_PROGRESS)
           execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xvf ../ninja.zip WORKING_DIRECTORY ./BUILD_TOOLS/)
+
+          if ("${{ runner.os }}" STREQUAL "Windows")
+            file(DOWNLOAD "https://github.com/frerich/clcache/releases/download/v4.2.0/clcache-4.2.0.zip" ./clcache.zip SHOW_PROGRESS)
+            execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xvf ../clcache.zip WORKING_DIRECTORY ./BUILD_TOOLS/)
+          endif()
+
           message("::add-path::$ENV{GITHUB_WORKSPACE}/BUILD_TOOLS")
 
           if (NOT "${{ runner.os }}" STREQUAL "Windows")
@@ -79,7 +84,12 @@ jobs:
             endforeach()
           endif()
 
-          execute_process(COMMAND cmake -S. -BBuild -GNinja -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} RESULT_VARIABLE result)
+          if (NOT "${{ runner.os }}" STREQUAL "Windows")
+            execute_process(COMMAND cmake -S. -BBuild -GNinja -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} RESULT_VARIABLE result)
+          else()
+            #  -DCMAKE_C_COMPILER_LAUNCHER=clcache -DCMAKE_CXX_COMPILER_LAUNCHER=clcache 
+            execute_process(COMMAND cmake -S. -BBuild -GNinja -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }}RESULT_VARIABLE result)
+          endif()
 
           if (NOT result EQUAL 0)
             message(FATAL_ERROR "Bad exit status.")
