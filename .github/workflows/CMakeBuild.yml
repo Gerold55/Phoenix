@@ -36,6 +36,8 @@ jobs:
         uses: actions/checkout@v2.3.1
         with:
           submodules: "recursive"
+          # if *any* of our scripts run a git command after this, remove this so they can be authenticated.
+          persist-credentials: false
 
       - name: Get Build Dependencies
         shell: cmake -P {0}
