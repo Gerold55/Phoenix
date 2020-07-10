@@ -102,7 +102,6 @@ jobs:
           if (NOT "${{ runner.os }}" STREQUAL "Windows")
             execute_process(COMMAND cmake -S. -BBuild -GNinja -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} RESULT_VARIABLE result)
           else()
-            #  -DCMAKE_C_COMPILER_LAUNCHER=clcache -DCMAKE_CXX_COMPILER_LAUNCHER=clcache 
             execute_process(COMMAND cmake -S. -BBuild -GNinja -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} RESULT_VARIABLE result)
           endif()
 
