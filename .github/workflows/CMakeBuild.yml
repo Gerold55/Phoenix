@@ -77,8 +77,8 @@ jobs:
         with:
           path: ~/BUILD_CACHE
           key: ${{ matrix.config.name }}-cache-${{ steps.cache_prep.outputs.timestamp }}
-          #restore-keys: |
-          #  ${{ matrix.config.name }}-cache-
+          restore-keys: |
+            ${{ matrix.config.name }}-cache-
 
       - name: Configure CMake
         shell: cmake -P {0}
