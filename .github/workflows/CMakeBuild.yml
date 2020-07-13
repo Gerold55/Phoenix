@@ -32,11 +32,18 @@ jobs:
           }
 
     env:
+      # compilers
       CC: ${{ matrix.config.cc }}
       CXX: ${{ matrix.config.cxx }}
-      SCCACHE_VERSION: 0.2.12
+
+      # ninja build, essentially a GNU make alternative.
       NINJA_VERSION: v1.10.0
+      NINJA_STATUS: [%f/%t %o/sec]
+
+      # compiler caching
+      SCCACHE_VERSION: 0.2.12
       SCCACHE_DIR: ${{ github.workspace }}/BUILD_CACHE
+      SCCACHE_CACHE_SIZE: 1G
 
     steps:
       - name: Checkout Repo
@@ -92,61 +99,48 @@ jobs:
           restore-keys: |
             ${{ matrix.config.name }}-cache-
 
-      - name: Details
+      - name: Configure CMake
         shell: cmake -P {0}
         run: |
-          message($ENV{GITHUB_WORKSPACE}/BUILD_CACHE)
+          if ("${{ runner.os }}" STREQUAL "Windows" AND NOT "x${{ matrix.config.environment_script }}" STREQUAL "x")
+            execute_process(COMMAND "${{ matrix.config.environment_script }}" && set OUTPUT_FILE environment_script_output.txt)
+            file(STRINGS environment_script_output.txt output_lines)
+            foreach(line IN LISTS output_lines)
+              if (line MATCHES "^([a-zA-Z0-9_-]+)=(.*)$")
+                set(ENV{${CMAKE_MATCH_1}} "${CMAKE_MATCH_2}")
+              endif()
+            endforeach()
+          endif()
 
-      - name: More Details
+          execute_process(COMMAND ${CMAKE_COMMAND} 
+            -S.
+            -BBuild
+            -GNinja
+            -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }}
+            -DCMAKE_C_COMPILER_LAUNCHER=sccache
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+            RESULT_VARIABLE result
+          )
+
+          if (NOT result EQUAL 0)
+            message(FATAL_ERROR "Bad exit status.")
+          endif()
+
+      - name: Build Project
+        shell: cmake -P {0}
         run: |
-          sccache -s
+          if ("${{ runner.os }}" STREQUAL "Windows" AND NOT "x${{ matrix.config.environment_script }}" STREQUAL "x")
+            execute_process(COMMAND "${{ matrix.config.environment_script }}" && set OUTPUT_FILE environment_script_output.txt)
+            file(STRINGS environment_script_output.txt output_lines)
+            foreach(line IN LISTS output_lines)
+              if (line MATCHES "^([a-zA-Z0-9_-]+)=(.*)$")
+                set(ENV{${CMAKE_MATCH_1}} "${CMAKE_MATCH_2}")
+              endif()
+            endforeach()
+          endif()
 
-#      - name: Configure CMake
-#        shell: cmake -P {0}
-#        run: |
-#          if ("${{ runner.os }}" STREQUAL "Windows" AND NOT "x${{ matrix.config.environment_script }}" STREQUAL "x")
-#            execute_process(COMMAND "${{ matrix.config.environment_script }}" && set OUTPUT_FILE environment_script_output.txt)
-#            file(STRINGS environment_script_output.txt output_lines)
-#            foreach(line IN LISTS output_lines)
-#              if (line MATCHES "^([a-zA-Z0-9_-]+)=(.*)$")
-#                set(ENV{${CMAKE_MATCH_1}} "${CMAKE_MATCH_2}")
-#              endif()
-#            endforeach()
-#          endif()
-#
-#          execute_process(COMMAND ${CMAKE_COMMAND} 
-#            -S.
-#            -BBuild
-#            -GNinja
-#            -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }}
-#            -DCMAKE_C_COMPILER_LAUNCHER=sccache
-#            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
-#            RESULT_VARIABLE result
-#          )
-#
-#          if (NOT result EQUAL 0)
-#            message(FATAL_ERROR "Bad exit status.")
-#          endif()
-#
-#      - name: Build Project
-#        shell: cmake -P {0}
-#        run: |
-#          set(ENV{NINJA_STATUS} "[%f/%t %o/sec] ")
-#          set(ENV{SCCACHE_DIR} $ENV{GITHUB_WORKSPACE}/BUILD_CACHE)
-#          set(ENV{SCCACHE_CACHE_SIZE} 1G)
-#
-#          if ("${{ runner.os }}" STREQUAL "Windows" AND NOT "x${{ matrix.config.environment_script }}" STREQUAL "x")
-#            execute_process(COMMAND "${{ matrix.config.environment_script }}" && set OUTPUT_FILE environment_script_output.txt)
-#            file(STRINGS environment_script_output.txt output_lines)
-#            foreach(line IN LISTS output_lines)
-#              if (line MATCHES "^([a-zA-Z0-9_-]+)=(.*)$")
-#                set(ENV{${CMAKE_MATCH_1}} "${CMAKE_MATCH_2}")
-#              endif()
-#            endforeach()
-#          endif()
-#
-#          execute_process(COMMAND ${CMAKE_COMMAND} --build Build RESULT_VARIABLE result)
-#
-#          if (NOT result EQUAL 0)
-#            message(FATAL_ERROR "Bad exit status.")
-#          endif()
+          execute_process(COMMAND ${CMAKE_COMMAND} --build Build RESULT_VARIABLE result)
+
+          if (NOT result EQUAL 0)
+            message(FATAL_ERROR "Bad exit status.")
+          endif()
