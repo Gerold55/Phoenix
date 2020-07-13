@@ -57,8 +57,8 @@ jobs:
           execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xvf ../ninja.zip WORKING_DIRECTORY ./BUILD_TOOLS/)
 
           if ("${{ runner.os }}" STREQUAL "Windows")
-            file(DOWNLOAD "https://github.com/mozilla/sccache/releases/download/${sccache_version}/sccache-0.2.12-x86_64-pc-windows-msvc.tar.gz" ./sccache.zip SHOW_PROGRESS)
-            execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xvf ../sccache.zip WORKING_DIRECTORY ./BUILD_TOOLS/)
+            file(DOWNLOAD "https://github.com/mozilla/sccache/releases/download/${sccache_version}/sccache-0.2.12-x86_64-pc-windows-msvc.tar.gz" ./sccache.tar.gz SHOW_PROGRESS)
+            execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xvf ../sccache.zip --strip 1 WORKING_DIRECTORY ./BUILD_TOOLS/)
           endif()
 
           message("::add-path::$ENV{GITHUB_WORKSPACE}/BUILD_TOOLS")
