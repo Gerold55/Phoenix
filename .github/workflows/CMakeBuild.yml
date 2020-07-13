@@ -1,10 +1,6 @@
 name: C++ CI
 on: [push, pull_request]
 
-env:
-  SCCACHE_VERSION: 0.2.12
-  NINJA_VERSION: v1.10.0
-
 jobs:
   build:
     name: ${{ matrix.config.name }}
@@ -38,6 +34,8 @@ jobs:
     env:
       CC: ${{ matrix.config.cc }}
       CXX: ${{ matrix.config.cxx }}
+      SCCACHE_VERSION: 0.2.12
+      NINJA_VERSION: v1.10.0
 
     steps:
       - name: Checkout Repo
@@ -63,13 +61,13 @@ jobs:
           execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory BUILD_TOOLS)
 
           # download ninja.
-          file(DOWNLOAD "https://github.com/ninja-build/ninja/releases/download/${NINJA_VERSION}/ninja-${NINJA_SUFFIX}" ./ninja.zip SHOW_PROGRESS)
+          file(DOWNLOAD "https://github.com/ninja-build/ninja/releases/download/$ENV{NINJA_VERSION}/ninja-${NINJA_SUFFIX}" ./ninja.zip SHOW_PROGRESS)
           execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xvf ../ninja.zip WORKING_DIRECTORY ./BUILD_TOOLS)
 
           # download sccache (cross-platform compiler caching that supports MSVC)
-          file(DOWNLOAD "https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/sccache-${SCCACHE_VERSION}-x86_64-${SCCACHE_SUFFIX}" ./sccache.tar.gz SHOW_PROGRESS)
+          file(DOWNLOAD "https://github.com/mozilla/sccache/releases/download/$ENV{SCCACHE_VERSION}/sccache-$ENV{SCCACHE_VERSION}-x86_64-${SCCACHE_SUFFIX}" ./sccache.tar.gz SHOW_PROGRESS)
           execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xvf ../sccache.tar.gz WORKING_DIRECTORY ./BUILD_TOOLS)
-          execute_process(COMMAND ${CMAKE_COMMAND} -E copy sccache-${SCCACHE_VERSION}-x86_64-${SCCACHE_SUFFIX}/sccache${SCCACHE_WINDOWS} ./sccache${SCCACHE_WINDOWS} WORKING_DIRECTORY ./BUILD_TOOLS)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E copy sccache-$ENV{SCCACHE_VERSION}-x86_64-${SCCACHE_SUFFIX}/sccache${SCCACHE_WINDOWS} ./sccache${SCCACHE_WINDOWS} WORKING_DIRECTORY ./BUILD_TOOLS)
 
           message("::add-path::$ENV{GITHUB_WORKSPACE}/BUILD_TOOLS")
 
@@ -125,7 +123,7 @@ jobs:
         run: |
           set(ENV{NINJA_STATUS} "[%f/%t %o/sec] ")
           set(ENV{SCCACHE_DIR} $ENV{GITHUB_WORKSPACE}/BUILD_CACHE)
-          set(ENV{SCCACHE_CACHE_SIZE} 1G}
+          set(ENV{SCCACHE_CACHE_SIZE} 1G)
 
           if ("${{ runner.os }}" STREQUAL "Windows" AND NOT "x${{ matrix.config.environment_script }}" STREQUAL "x")
             execute_process(COMMAND "${{ matrix.config.environment_script }}" && set OUTPUT_FILE environment_script_output.txt)
