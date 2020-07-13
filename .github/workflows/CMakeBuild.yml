@@ -144,3 +144,8 @@ jobs:
           if (NOT result EQUAL 0)
             message(FATAL_ERROR "Bad exit status.")
           endif()
+
+      - name: Cache Status
+        run: |
+          sccache -s
+          sccache --stop-server
