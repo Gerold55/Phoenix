@@ -38,7 +38,7 @@ jobs:
 
       # ninja build, essentially a GNU make alternative.
       NINJA_VERSION: v1.10.0
-      NINJA_STATUS: [%f/%t %o/sec]
+      NINJA_STATUS: "[%f/%t %o/sec]"
 
       # compiler caching
       SCCACHE_VERSION: 0.2.12
