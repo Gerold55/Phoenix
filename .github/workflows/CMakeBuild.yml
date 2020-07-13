@@ -65,6 +65,7 @@ jobs:
           execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xvf ../ninja.zip WORKING_DIRECTORY ./BUILD_TOOLS)
 
           # download sccache (cross-platform compiler caching that supports MSVC)
+          message("https://github.com/mozilla/sccache/releases/download/$ENV{SCCACHE_VERSION}/sccache-$ENV{SCCACHE_VERSION}-x86_64-${SCCACHE_SUFFIX}")
           file(DOWNLOAD "https://github.com/mozilla/sccache/releases/download/$ENV{SCCACHE_VERSION}/sccache-$ENV{SCCACHE_VERSION}-x86_64-${SCCACHE_SUFFIX}" ./sccache.tar.gz SHOW_PROGRESS)
           execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xvf ../sccache.tar.gz WORKING_DIRECTORY ./BUILD_TOOLS)
           execute_process(COMMAND ${CMAKE_COMMAND} -E copy sccache-$ENV{SCCACHE_VERSION}-x86_64-${SCCACHE_SUFFIX}/sccache${SCCACHE_WINDOWS} ./sccache${SCCACHE_WINDOWS} WORKING_DIRECTORY ./BUILD_TOOLS)
