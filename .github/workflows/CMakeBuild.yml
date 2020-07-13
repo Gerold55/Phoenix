@@ -36,6 +36,7 @@ jobs:
       CXX: ${{ matrix.config.cxx }}
       SCCACHE_VERSION: 0.2.12
       NINJA_VERSION: v1.10.0
+      SCCACHE_DIR: ${{ github.workspace }}/BUILD_CACHE
 
     steps:
       - name: Checkout Repo
