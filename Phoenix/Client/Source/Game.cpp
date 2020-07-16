@@ -295,8 +295,8 @@ void Game::onAttach()
 		m_world = new voxels::ChunkView(3, new voxels::Map(save, "map1"));
 	}
 	m_player->setWorld(m_world);
-	m_camera = new gfx::FPSCamera(m_window, m_registry);
-	m_camera->setActor(m_player->getEntity());
+	//m_camera = new gfx::FPSCamera(m_window, m_registry);
+	//m_camera->setActor(m_player->getEntity());
 
 	m_registry->emplace<Hand>(
 	    m_player->getEntity(),

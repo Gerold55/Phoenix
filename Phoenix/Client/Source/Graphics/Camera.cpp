@@ -1,4 +1,4 @@
-// Copyright 2019-20 Genten Studios
+// Copyright 2019 Genten Studios
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -28,18 +28,18 @@
 
 #include <Client/Graphics/Camera.hpp>
 
-#include <Common/Position.hpp>
+const float MOVE_SPEED = 0.01f;
 
 using namespace phx;
 using namespace gfx;
 
-FPSCamera::FPSCamera(Window* window, entt::registry* registry) : m_registry(registry), m_enabled(true)
+FPSCamera::FPSCamera(Window* window)
 {
 	m_window = window;
 	m_window->setCursorState(CursorState::DISABLED);
 
 	// Calculates the perspective projection
-	const math::vec2 windowSize = window->getSize();
+	const math::vec2f windowSize = static_cast<math::vec2f>(window->getSize());
 	m_projection = math::mat4::perspective(windowSize.x / windowSize.y, 45.f,
 	                                       1000.f, 0.1f);
 
@@ -49,10 +49,14 @@ FPSCamera::FPSCamera(Window* window, entt::registry* registry) : m_registry(regi
 	                  std::floor(windowSize.y / 2.f)};
 
 	m_settingSensitivity =
-	    Settings::get()->add("Sensitivity", "camera:sensitivity", 50);
+	    Settings::get()->add("Sensitivity", "camera:sensitivity", 5);
 	m_settingSensitivity->setMax(100);
 	m_settingSensitivity->setMin(1);
 }
+
+math::vec3 FPSCamera::getPosition() const { return m_position; }
+
+math::vec3 FPSCamera::getDirection() const { return m_direction; }
 
 void FPSCamera::setProjection(const math::mat4& projection)
 {
@@ -63,9 +67,8 @@ math::mat4 FPSCamera::getProjection() const { return m_projection; }
 
 math::mat4 FPSCamera::calculateViewMatrix() const
 {
-	const Position&  pos    = m_registry->get<Position>(m_actor);
-	const math::vec3 centre = pos.position + pos.getDirection();
-	return math::mat4::lookAt(pos.position, centre, m_up);
+	const math::vec3 centre = m_position + m_direction;
+	return math::mat4::lookAt(m_position, centre, m_up);
 }
 
 void FPSCamera::tick(float dt)
@@ -74,27 +77,56 @@ void FPSCamera::tick(float dt)
 	if (!m_enabled)
 		return;
 
-	// make sure we don't segfault because we haven't set the actor yet.
-	if (!m_registry->valid(m_actor))
-		return;
-
 	const math::vec2 mousePos = m_window->getCursorPosition();
 
 	m_window->setCursorPosition(m_windowCentre);
 
-	const float sensitivity =
-	    static_cast<float>(m_settingSensitivity->value()) / 50.f;
-
-	Position& pos = m_registry->get<Position>(m_actor);
+	const float sensitivity = m_settingSensitivity->value() / 75.f;
 
 	/// @todo Fix this up since we're having an issue where we turn more/less
 	/// due to higher/lower frames.
-	pos.rotation.x += sensitivity * dt * (m_windowCentre.x - mousePos.x);
-	pos.rotation.y += sensitivity * dt * (m_windowCentre.y - mousePos.y);
+	m_rotation.x += sensitivity * dt * (m_windowCentre.x - mousePos.x);
+	m_rotation.y += sensitivity * dt * (m_windowCentre.y - mousePos.y);
 
-	pos.rotation.y = math::clamp(pos.rotation.y, -math::PIDIV2, math::PIDIV2);
+	m_rotation.y = math::clamp(m_rotation.y, -math::PIDIV2, math::PIDIV2);
 
-	m_up = math::vec3::cross(pos.getRight(), pos.getDirection());
+	m_direction.x = std::cos(m_rotation.y) * std::sin(m_rotation.x);
+	m_direction.y = std::sin(m_rotation.y);
+	m_direction.z = std::cos(m_rotation.y) * std::cos(m_rotation.x);
+
+	const math::vec3 right = {std::sin(m_rotation.x - math::PIDIV2), 0.f,
+	                          std::cos(m_rotation.x - math::PIDIV2)};
+
+	m_up = math::vec3::cross(right, m_direction);
+
+	const float moveSpeed = 5.f;
+
+	if (m_window->isKeyDown(events::Keys::KEY_W))
+	{
+		m_position += m_direction * dt * moveSpeed;
+	}
+	else if (m_window->isKeyDown(events::Keys::KEY_S))
+	{
+		m_position -= m_direction * dt * moveSpeed;
+	}
+
+	if (m_window->isKeyDown(events::Keys::KEY_A))
+	{
+		m_position -= right * dt * moveSpeed;
+	}
+	else if (m_window->isKeyDown(events::Keys::KEY_D))
+	{
+		m_position += right * dt * moveSpeed;
+	}
+
+	if (m_window->isKeyDown(events::Keys::KEY_SPACE))
+	{
+		m_position.y += dt * moveSpeed;
+	}
+	else if (m_window->isKeyDown(events::Keys::KEY_LEFT_SHIFT))
+	{
+		m_position.y -= dt * moveSpeed;
+	}
 }
 
 void FPSCamera::enable(bool enabled)
@@ -117,12 +149,11 @@ void FPSCamera::enable(bool enabled)
 void FPSCamera::onWindowResize(events::Event e)
 {
 	// recalculate window size again, to not be inefficient.
-	const math::vec2 windowSize = m_window->getSize();
-	m_projection = math::mat4::perspective(windowSize.x / windowSize.y,
+	const math::vec2i windowSize = m_window->getSize();
+	m_projection = math::mat4::perspective(static_cast<float>(windowSize.x) /
+	                                           static_cast<float>(windowSize.y),
 	                                       45.f, 1000.f, 0.1f);
 
 	m_windowCentre = {static_cast<float>(static_cast<int>(windowSize.x / 2)),
 	                  static_cast<float>(static_cast<int>(windowSize.y / 2))};
 }
-
-void FPSCamera::setActor(entt::entity actor) { m_actor = actor;}

@@ -20,6 +20,7 @@ set(Headers
 
         ${currentDir}/Settings.hpp
         ${currentDir}/Commander.hpp
+        ${currentDir}/Actor.hpp
         ${currentDir}/Position.hpp
         ${currentDir}/Movement.hpp
         ${currentDir}/Input.hpp

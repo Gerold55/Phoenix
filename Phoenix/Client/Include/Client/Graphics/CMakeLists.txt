@@ -17,6 +17,7 @@ set(graphicsHeaders
 	${currentDir}/ShaderPipeline.hpp
 	${currentDir}/Camera.hpp
 
+	${currentDir}/BlockModel.hpp
 	${currentDir}/ChunkMesher.hpp
 	${currentDir}/ChunkRenderer.hpp
 	${currentDir}/ChunkView.hpp
