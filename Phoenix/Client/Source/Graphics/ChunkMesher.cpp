@@ -27,102 +27,19 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <Client/Graphics/ChunkMesher.hpp>
+#include <Client/Graphics/BasicBlockModels.hpp>
+
 #include <Common/Voxels/Chunk.hpp>
-
-static const phx::math::vec3 CUBE_VERTS[] = {
-    // front
-    phx::math::vec3(-1.f, -1.f, -1.f), phx::math::vec3(1.f, -1.f, -1.f),
-    phx::math::vec3(1.f, 1.f, -1.f), phx::math::vec3(1.f, 1.f, -1.f),
-    phx::math::vec3(-1.f, 1.f, -1.f), phx::math::vec3(-1.f, -1.f, -1.f),
-
-	// left
-    phx::math::vec3(-1.f, 1.f, 1.f), phx::math::vec3(-1.f, 1.f, -1.f),
-    phx::math::vec3(-1.f, -1.f, -1.f), phx::math::vec3(-1.f, -1.f, -1.f),
-    phx::math::vec3(-1.f, -1.f, 1.f), phx::math::vec3(-1.f, 1.f, 1.f),
-
-    // back
-    phx::math::vec3(-1.f, -1.f, 1.f), phx::math::vec3(1.f, -1.f, 1.f),
-    phx::math::vec3(1.f, 1.f, 1.f), phx::math::vec3(1.f, 1.f, 1.f),
-    phx::math::vec3(-1.f, 1.f, 1.f), phx::math::vec3(-1.f, -1.f, 1.f),
-
-    // right
-    phx::math::vec3(1.f, 1.f, 1.f), phx::math::vec3(1.f, 1.f, -1.f),
-    phx::math::vec3(1.f, -1.f, -1.f), phx::math::vec3(1.f, -1.f, -1.f),
-    phx::math::vec3(1.f, -1.f, 1.f), phx::math::vec3(1.f, 1.f, 1.f),
-
-	// top
-    phx::math::vec3(-1.f, 1.f, -1.f), phx::math::vec3(1.f, 1.f, -1.f),
-    phx::math::vec3(1.f, 1.f, 1.f), phx::math::vec3(1.f, 1.f, 1.f),
-    phx::math::vec3(-1.f, 1.f, 1.f), phx::math::vec3(-1.f, 1.f, -1.f),
-
-    // bottom
-    phx::math::vec3(-1.f, -1.f, -1.f), phx::math::vec3(1.f, -1.f, -1.f),
-    phx::math::vec3(1.f, -1.f, 1.f), phx::math::vec3(1.f, -1.f, 1.f),
-    phx::math::vec3(-1.f, -1.f, 1.f), phx::math::vec3(-1.f, -1.f, -1.f),
-};
-
-static const phx::math::vec2 CUBE_UV[] = {
-    // front north
-    phx::math::vec2(-0.f, 1.f),
-    phx::math::vec2(-1.f, 1.f),
-    phx::math::vec2(-1.f, 0.f),
-    phx::math::vec2(-1.f, 0.f),
-    phx::math::vec2(-0.f, 0.f),
-    phx::math::vec2(-0.f, 1.f),
-
-	// left west
-    phx::math::vec2(-0.f, 0.f),
-    phx::math::vec2(-1.f, 0.f),
-    phx::math::vec2(-1.f, 1.f),
-    phx::math::vec2(-1.f, 1.f),
-    phx::math::vec2(-0.f, 1.f),
-    phx::math::vec2(-0.f, 0.f),
-
-    // back south
-    phx::math::vec2(0.f, 1.f),
-    phx::math::vec2(1.f, 1.f),
-    phx::math::vec2(1.f, 0.f),
-    phx::math::vec2(1.f, 0.f),
-    phx::math::vec2(0.f, 0.f),
-    phx::math::vec2(0.f, 1.f),
-
-	// right east
-    phx::math::vec2(0.f, 0.f),
-    phx::math::vec2(1.f, 0.f),
-    phx::math::vec2(1.f, 1.f),
-    phx::math::vec2(1.f, 1.f),
-    phx::math::vec2(0.f, 1.f),
-    phx::math::vec2(0.f, 0.f),
-
-    // top
-    phx::math::vec2(0.f, -1.f),
-    phx::math::vec2(1.f, -1.f),
-    phx::math::vec2(1.f, -0.f),
-    phx::math::vec2(1.f, -0.f),
-    phx::math::vec2(0.f, -0.f),
-    phx::math::vec2(0.f, -1.f),
-
-    // bottom
-    phx::math::vec2(0.f, 1.f),
-    phx::math::vec2(1.f, 1.f),
-    phx::math::vec2(1.f, 0.f),
-    phx::math::vec2(1.f, 0.f),
-    phx::math::vec2(0.f, 0.f),
-    phx::math::vec2(0.f, 1.f),
-};
-
-const int ACTUAL_CUBE_SIZE  = 2;
-const int NUM_FACES_IN_CUBE = 6;
-const int NUM_VERTS_IN_FACE = 6;
 
 using namespace phx;
 using namespace gfx;
 
 void ChunkMesher::mesh()
 {
+	// turning clang format off since reading code like this is w h a c k
+	// clang-format off
 	using namespace voxels;
-	for (std::size_t i = 0;
-	     i < Chunk::CHUNK_WIDTH * Chunk::CHUNK_HEIGHT * Chunk::CHUNK_DEPTH; ++i)
+	for (std::size_t i = 0; i < Chunk::CHUNK_WIDTH * Chunk::CHUNK_HEIGHT * Chunk::CHUNK_DEPTH; ++i)
 	{
 		BlockType* block = m_blockRef[i];
 
@@ -133,39 +50,25 @@ void ChunkMesher::mesh()
 		const std::size_t y = (i / Chunk::CHUNK_WIDTH) % Chunk::CHUNK_HEIGHT;
 		const std::size_t z = i / (Chunk::CHUNK_WIDTH * Chunk::CHUNK_HEIGHT);
 
-		if (x == 0 ||
-		    m_blockRef[Chunk::getVectorIndex(x - 1, y, z)]->category !=
-		        BlockCategory::SOLID)
-			addBlockFace(block, BlockFace::LEFT, static_cast<float>(x),
-			             static_cast<float>(y), static_cast<float>(z));
-		if (x == Chunk::CHUNK_WIDTH - 1 ||
-		    m_blockRef[Chunk::getVectorIndex(x + 1, y, z)]->category !=
-		        BlockCategory::SOLID)
-			addBlockFace(block, BlockFace::RIGHT, static_cast<float>(x),
-			             static_cast<float>(y), static_cast<float>(z));
+		if (x == 0 || m_blockRef[Chunk::getVectorIndex(x - 1, y, z)]->category != BlockCategory::SOLID)
+		{
+			if ()
+			addBlockFace(block, BlockFace::LEFT, static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+		}
+		if (x == Chunk::CHUNK_WIDTH - 1 || m_blockRef[Chunk::getVectorIndex(x + 1, y, z)]->category != BlockCategory::SOLID)
+			addBlockFace(block, BlockFace::RIGHT, static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
 
-		if (y == 0 ||
-		    m_blockRef[Chunk::getVectorIndex(x, y - 1, z)]->category !=
-		        BlockCategory::SOLID)
-			addBlockFace(block, BlockFace::BOTTOM, static_cast<float>(x),
-			             static_cast<float>(y), static_cast<float>(z));
-		if (y == Chunk::CHUNK_WIDTH - 1 ||
-		    m_blockRef[Chunk::getVectorIndex(x, y + 1, z)]->category !=
-		        BlockCategory::SOLID)
-			addBlockFace(block, BlockFace::TOP, static_cast<float>(x),
-			             static_cast<float>(y), static_cast<float>(z));
+		if (y == 0 || m_blockRef[Chunk::getVectorIndex(x, y - 1, z)]->category != BlockCategory::SOLID)
+			addBlockFace(block, BlockFace::BOTTOM, static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+		if (y == Chunk::CHUNK_WIDTH - 1 || m_blockRef[Chunk::getVectorIndex(x, y + 1, z)]->category != BlockCategory::SOLID)
+			addBlockFace(block, BlockFace::TOP, static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
 
-		if (z == 0 ||
-		    m_blockRef[Chunk::getVectorIndex(x, y, z - 1)]->category !=
-		        BlockCategory::SOLID)
-			addBlockFace(block, BlockFace::FRONT, static_cast<float>(x),
-			             static_cast<float>(y), static_cast<float>(z));
-		if (z == Chunk::CHUNK_DEPTH - 1 ||
-		    m_blockRef[Chunk::getVectorIndex(x, y, z + 1)]->category !=
-		        BlockCategory::SOLID)
-			addBlockFace(block, BlockFace::BACK, static_cast<float>(x),
-			             static_cast<float>(y), static_cast<float>(z));
+		if (z == 0 || m_blockRef[Chunk::getVectorIndex(x, y, z - 1)]->category != BlockCategory::SOLID)
+			addBlockFace(block, BlockFace::FRONT, static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+		if (z == Chunk::CHUNK_DEPTH - 1 || m_blockRef[Chunk::getVectorIndex(x, y, z + 1)]->category != BlockCategory::SOLID)
+			addBlockFace(block, BlockFace::BACK, static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
 	}
+	// clang-format on
 }
 
 void ChunkMesher::addBlockFace(voxels::BlockType* block, BlockFace face,

@@ -18,6 +18,7 @@ set(graphicsHeaders
 	${currentDir}/Camera.hpp
 
 	${currentDir}/BlockModel.hpp
+	${currentDir}/BasicBlockModels.hpp
 	${currentDir}/ChunkMesher.hpp
 	${currentDir}/ChunkRenderer.hpp
 	${currentDir}/ChunkView.hpp
